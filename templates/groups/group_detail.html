@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ group.name }} - Breakmoney{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm mb-4 bg-white overflow-hidden">
+    <div class="bg-success bg-opacity-10 py-3 px-4 border-bottom border-success border-opacity-25">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <a href="{% url 'groups:list' %}" class="btn btn-sm btn-light rounded-circle p-2 me-3 shadow-sm border" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-arrow-left"></i></a>
+                {% if group.icon %}
+                    <img src="{{ group.icon.url }}" alt="Icon" class="rounded-circle me-3 shadow-sm border border-white border-3" style="width: 70px; height: 70px; object-fit: cover; background: white;">
+                {% else %}
+                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm border border-white border-3" style="width: 70px; height: 70px; font-size: 2rem;">
+                        <i class="bi bi-houses-fill"></i>
+                    </div>
+                {% endif %}
+                <div>
+                    <h2 class="mb-0 fw-bold">{{ group.name }}</h2>
+                    <div class="d-flex align-items-center mt-2">
+                        {% if group_balance == 0 %}
+                            <span class="badge bg-success text-white border border-success px-2 py-1 shadow-sm"><i class="bi bi-check-circle me-1"></i>Settled up! 🎉</span>
+                        {% elif group_balance > 0 %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 shadow-sm">You are owed ₹{{ group_balance|floatformat:2 }}</span>
+                        {% else %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 shadow-sm">You owe ₹{{ group_balance|stringformat:".2f"|slice:"1:" }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <!-- Desktop Buttons -->
+            <div class="d-none d-md-flex">
+                <a href="{% url 'groups:balances' group.id %}" class="btn btn-outline-secondary fw-bold rounded-pill px-4 shadow-sm me-2"><i class="bi bi-list-check me-1"></i> Balances</a>
+                <a href="{% url 'settlements:create' %}?group_id={{ group.id }}" class="btn btn-outline-success fw-bold rounded-pill px-4 shadow-sm me-2">Settle Up</a>
+                <a href="{% url 'expenses:group_create' group.id %}" class="btn btn-success fw-bold rounded-pill px-4 shadow-sm"><i class="bi bi-plus-lg me-1"></i> Add Expense</a>
+            </div>
+        </div>
+    </div>
+    <!-- Mobile action buttons -->
+    <div class="d-flex d-md-none p-3 bg-light border-bottom overflow-auto hide-scrollbar gap-2">
+         <a href="{% url 'groups:balances' group.id %}" class="btn btn-outline-secondary fw-bold rounded-pill px-3 shadow-sm flex-fill text-nowrap"><i class="bi bi-list-check me-1"></i> Balances</a>
+         <a href="{% url 'settlements:create' %}?group_id={{ group.id }}" class="btn btn-outline-success fw-bold rounded-pill px-3 shadow-sm flex-fill text-nowrap">Settle Up</a>
+         <a href="{% url 'expenses:group_create' group.id %}" class="btn btn-success fw-bold rounded-pill px-3 shadow-sm flex-fill text-nowrap"><i class="bi bi-plus-lg me-1"></i> Add Expense</a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Expenses Area -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-receipt me-2 text-muted"></i>Recent Expenses</h5>
+            </div>
+            
+            <ul class="list-group list-group-flush">
+                {% for expense in expenses %}
+                <a href="{% url 'expenses:detail' expense.id %}" class="list-group-item list-group-item-action p-3 border-bottom transition-hover">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light text-muted rounded p-2 me-3 text-center border shadow-sm" style="width: 55px; line-height: 1.2;">
+                                <small class="d-block fw-bold text-uppercase" style="font-size: 0.7rem;">{{ expense.date|date:"M" }}</small>
+                                <strong class="d-block fs-5 text-dark">{{ expense.date|date:"d" }}</strong>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold text-dark">{{ expense.description }}</h6>
+                                <small class="text-muted"><i class="bi bi-person-fill me-1"></i>{{ expense.created_by.first_name }} paid</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <h5 class="mb-0 fw-bold {% if expense.created_by == request.user %}text-success{% else %}text-dark{% endif %}">
+                                ₹{{ expense.amount }}
+                            </h5>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border mt-1" style="font-size: 0.7rem;">{{ expense.get_split_type_display }}</span>
+                        </div>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="card-body text-center py-5">
+                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-receipt text-muted" style="font-size: 2rem;"></i>
+                    </div>
+                    <h5 class="fw-bold">No expenses yet</h5>
+                    <p class="text-muted">Click the Add Expense button above to get started.</p>
+                </div>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Group Members Sidebar -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-people me-2 text-muted"></i>Group Members</h6>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for member in members %}
+                <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-secondary bg-opacity-10 text-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px; font-weight: bold;">
+                            {{ member.user.email|make_list|first|upper }}
+                        </div>
+                        <div>
+                            <span class="fw-bold d-block lh-1">{{ member.user.get_full_name }}</span>
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ member.user.email }}</small>
+                        </div>
+                    </div>
+                    <div>
+                        {% if member.role == 'ADMIN' %}
+                            <span class="badge bg-warning text-dark border border-warning rounded-pill me-1" style="font-size: 0.65rem;">ADMIN</span>
+                        {% endif %}
+                        {% if is_admin and member.user != request.user %}
+                        <form method="post" action="{% url 'groups:remove_member' group.id member.user.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm text-danger p-0 ms-1 bg-transparent border-0" onclick="return confirm('Remove this user from the group?');" title="Remove Member"><i class="bi bi-x-circle-fill"></i></button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="card shadow-sm border-success border-opacity-50 bg-success bg-opacity-10 mb-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-success mb-3"><i class="bi bi-person-plus-fill me-2"></i>Invite Member</h6>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="add_member" value="1">
+                    {{ add_member_form|crispy }}
+                    <button type="submit" class="btn btn-success fw-bold w-100 mt-2 shadow-sm">Add to Group</button>
+                </form>
+            </div>
+        </div>
+
+        {% if is_admin %}
+        <div class="card shadow-sm border-danger border-opacity-50 bg-danger bg-opacity-10">
+            <div class="card-body p-4 text-center">
+                <h6 class="fw-bold text-danger mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>Danger Zone</h6>
+                <p class="small text-danger mb-3">Deleting this group will remove all expenses and settlements linked to it permanently.</p>
+                <form method="post" action="{% url 'groups:delete' group.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger fw-bold w-100 shadow-sm" onclick="return confirm('Are you absolutely sure you want to delete this group? This action cannot be undone and will delete all associated expenses.');">Delete Group</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<style>
+    .transition-hover:hover { background-color: #f8f9fa; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+{% endblock %}

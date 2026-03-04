@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Record a Payment - Breakmoney{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="text-center mb-4 mt-3">
+            <i class="bi bi-cash-coin text-success" style="font-size: 3rem;"></i>
+            <h2 class="fw-bold mt-2">Settle Up</h2>
+            <p class="text-muted">Record a payment between you and a friend.</p>
+        </div>
+        
+        <div class="card shadow border-0 overflow-hidden rounded-3 mb-5">
+            <div class="card-body p-4 p-md-5 bg-white">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="bg-light p-4 rounded-3 mb-4 border border-secondary border-opacity-10">
+                        <div class="row align-items-center">
+                            <div class="col-md-5 mb-3 mb-md-0">
+                                <label class="form-label fw-bold text-muted small text-uppercase">Who Paid?</label>
+                                {{ form.payer|as_crispy_field }}
+                            </div>
+                            <div class="col-md-2 text-center text-success fs-4 d-none d-md-block">
+                                <i class="bi bi-arrow-right-circle-fill"></i>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold text-muted small text-uppercase">Who Received?</label>
+                                {{ form.receiver|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Amount</label>
+                            <div class="input-group shadow-sm rounded">
+                                <span class="input-group-text bg-success text-white border-success"><i class="bi bi-currency-rupee"></i></span>
+                                <!-- NEW: Added value="{{ form.amount.value... }}" below -->
+                                <input type="number" name="amount" step="0.01" class="form-control border-success fw-bold text-success fs-5" required id="id_amount" placeholder="0.00" value="{{ form.amount.value|default_if_none:'' }}">
+                            </div>
+                            {% if form.amount.errors %}<div class="text-danger small mt-1">{{ form.amount.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Date</label>
+                            {{ form.date|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="mb-4 p-3 bg-light rounded-3 border shadow-sm">
+                        <label class="form-label fw-bold text-muted small text-uppercase"><i class="bi bi-houses-fill me-1"></i> Link to a Group</label>
+                        {{ form.group|as_crispy_field }}
+                        <div class="text-muted small mt-1"><i class="bi bi-info-circle me-1"></i>If you leave this empty, the payment counts towards your overall, non-group balance.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        {{ form.notes|as_crispy_field }}
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4 pt-4 border-top">
+                        <button type="button" class="btn btn-light rounded-pill px-4 me-md-2 fw-medium border shadow-sm" onclick="history.back()">Cancel</button>
+                        <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm"><i class="bi bi-check2-circle me-2"></i>Record Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Clean up crispy form default labels since we customized them */
+    label[for="id_payer"], label[for="id_receiver"], label[for="id_amount"], label[for="id_date"], label[for="id_group"] { display: none; }
+</style>
+{% endblock %}

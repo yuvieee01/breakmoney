@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Group - Breakmoney{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="text-center mb-4 mt-4">
+            <i class="bi bi-people text-success" style="font-size: 3rem;"></i>
+            <h2 class="fw-bold mt-2">Start a New Group</h2>
+            <p class="text-muted">Perfect for trips, apartments, or shared events.</p>
+        </div>
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 p-md-5">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-flex justify-content-end mt-4">
+                        <a href="{% url 'groups:list' %}" class="btn btn-light rounded-pill px-4 me-2">Cancel</a>
+                        <button type="submit" class="btn btn-success rounded-pill px-4 shadow-sm">Create Group</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

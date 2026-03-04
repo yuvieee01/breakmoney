@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Ledger with {{ friend.get_full_name }} - Breakmoney{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row align-items-md-center mb-4 mt-2">
+    <div class="d-flex align-items-center flex-grow-1 mb-3 mb-md-0">
+        <a href="{% url 'friends:list' %}" class="btn btn-light rounded-circle p-2 me-3 border shadow-sm" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-arrow-left"></i></a>
+        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 55px; height: 55px; font-size: 1.5rem;">
+            {{ friend.email|make_list|first|upper }}
+        </div>
+        <div>
+            <h2 class="mb-0 fw-bold">{{ friend.get_full_name }}</h2>
+            <p class="text-muted mb-0"><i class="bi bi-envelope me-1"></i>{{ friend.email }}</p>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'expenses:create' %}?friend_id={{ friend.id }}" class="btn btn-success rounded-pill px-4 shadow-sm fw-bold"><i class="bi bi-plus-lg me-1"></i> Add Expense</a>
+        
+        <!-- SMART SETTLE UP BUTTON -->
+        {% if balance < 0 %}
+            <a href="{% url 'settlements:create' %}?receiver_id={{ friend.id }}&payer_id={{ request.user.id }}&amount={{ balance|stringformat:'.2f'|slice:'1:' }}" class="btn btn-outline-success rounded-pill px-4 shadow-sm fw-bold">Settle Up</a>
+        {% elif balance > 0 %}
+            <a href="{% url 'settlements:create' %}?receiver_id={{ request.user.id }}&payer_id={{ friend.id }}&amount={{ balance|stringformat:'.2f' }}" class="btn btn-outline-success rounded-pill px-4 shadow-sm fw-bold">Settle Up</a>
+        {% else %}
+            <a href="{% url 'settlements:create' %}?receiver_id={{ friend.id }}" class="btn btn-outline-success rounded-pill px-4 shadow-sm fw-bold">Settle Up</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-12 mb-4">
+        <div class="card bg-success bg-opacity-10 border-success border-opacity-25 shadow-sm">
+            <div class="card-body text-center py-5">
+                <h6 class="text-success text-uppercase fw-bold mb-3 tracking-wide">Total Global Balance</h6>
+                {% if balance == 0 %}
+                    <h1 class="amount-neutral fw-bold mb-0 text-success">Settled up! 🎉</h1>
+                {% elif balance > 0 %}
+                    <h1 class="amount-positive fw-bold mb-0 text-success">You are owed ₹{{ balance|floatformat:2 }}</h1>
+                {% else %}
+                    <h1 class="amount-negative fw-bold mb-0 text-danger">You owe ₹{{ balance|stringformat:".2f"|slice:"1:" }}</h1>
+                {% endif %}
+                <p class="small text-muted mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>This balance includes direct expenses AND shared group expenses.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-12">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-muted"></i>Shared History</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for item in history %}
+                <li class="list-group-item p-3 border-bottom transition-hover position-relative">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light text-muted rounded p-2 me-3 text-center border shadow-sm" style="width: 55px; line-height: 1.2;">
+                                <small class="d-block fw-bold text-uppercase" style="font-size: 0.7rem;">{{ item.date|date:"M" }}</small>
+                                <strong class="d-block fs-5 text-dark">{{ item.date|date:"d" }}</strong>
+                            </div>
+                            <div>
+                                {% if item.category %}
+                                    <h6 class="mb-1 fw-bold text-dark">{{ item.description }}</h6>
+                                    <small class="text-muted d-block"><i class="bi bi-receipt me-1"></i>Added by {{ item.created_by.first_name }}</small>
+                                    {% if item.group %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border mt-1"><i class="bi bi-houses me-1"></i>{{ item.group.name }}</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border mt-1"><i class="bi bi-person me-1"></i>Direct Expense</span>
+                                    {% endif %}
+                                    <a href="{% url 'expenses:detail' item.id %}" class="stretched-link"></a>
+                                {% else %}
+                                    <h6 class="mb-1 fw-bold text-success">Payment</h6>
+                                    <small class="text-muted d-block"><i class="bi bi-cash-coin me-1"></i>{{ item.payer.first_name }} paid {{ item.receiver.first_name }}</small>
+                                    {% if item.group %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border mt-1"><i class="bi bi-houses me-1"></i>{{ item.group.name }}</span>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <h5 class="mb-0 fw-bold text-dark">₹{{ item.amount|floatformat:2 }}</h5>
+                        </div>
+                    </div>
+                </li>
+                {% empty %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inboxes fs-1 d-block mb-3"></i>
+                    <p>No shared expenses or payments yet.</p>
+                </div>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

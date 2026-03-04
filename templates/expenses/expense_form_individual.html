@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Add Expense - Breakmoney{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="d-flex align-items-center mb-3">
+             <a href="javascript:history.back()" class="text-decoration-none text-muted fw-medium"><i class="bi bi-arrow-left me-1"></i> Back</a>
+        </div>
+        <div class="card shadow-sm border-0 mb-5">
+            <div class="card-header bg-success text-white py-3 border-bottom-0 rounded-top" style="border-radius: 0.75rem 0.75rem 0 0;">
+                <h4 class="mb-0 fw-bold"><i class="bi bi-receipt me-2"></i>Add a direct expense</h4>
+                <p class="mb-0 small text-white-50">Between you and a friend</p>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="bg-light p-4 rounded-3 mb-4 border border-secondary border-opacity-10">
+                        <h6 class="fw-bold mb-3 border-bottom pb-2">Who are you splitting with?</h6>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label requiredField fw-medium text-muted small">Select Friend <span class="asteriskField">*</span></label>
+                                <select name="split_with" id="id_split_with" class="form-select shadow-sm border-0" required>
+                                    <option value="" disabled {% if not selected_friend_id %}selected{% endif %}>Choose a friend...</option>
+                                    {% for friend in friends %}
+                                        <option value="{{ friend.id }}" {% if friend.id == selected_friend_id %}selected{% endif %}>
+                                            {{ friend.get_full_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-8 mb-3 mb-md-0">
+                            {{ form.description|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Amount (₹)*</label>
+                            <div class="input-group shadow-sm rounded">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-currency-rupee"></i></span>
+                                <input type="number" name="amount" step="0.01" class="form-control border-start-0 ps-0" required id="id_amount">
+                            </div>
+                            {% if form.amount.errors %}<div class="text-danger small mt-1">{{ form.amount.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="bg-light p-4 rounded-3 mb-4 border border-secondary border-opacity-10">
+                        <h6 class="fw-bold mb-3 border-bottom pb-2">Who paid and how to split?</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="form-label requiredField fw-medium text-muted small">Paid by <span class="asteriskField">*</span></label>
+                                <select name="payer" class="form-select shadow-sm border-0" required>
+                                    <option value="me" selected>I paid</option>
+                                    <option value="them">They paid</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.split_type|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <!-- Dynamic Split Inputs -->
+                        <div id="dynamic-split-section" class="mt-4 pt-3 border-top border-secondary border-opacity-10" style="display: none;">
+                            <h6 class="fw-bold mb-3 text-success">Enter <span id="split-type-label">Amounts</span></h6>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-medium text-dark">You</span>
+                                <div class="input-group shadow-sm" style="width: 150px;">
+                                    <span class="input-group-text bg-white split-symbol">₹</span>
+                                    <input type="number" step="0.01" name="split_value_me" class="form-control border-start-0 split-input" value="0">
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-medium text-dark" id="dynamic-friend-name">Friend</span>
+                                <div class="input-group shadow-sm" style="width: 150px;">
+                                    <span class="input-group-text bg-white split-symbol">₹</span>
+                                    <input type="number" step="0.01" name="split_value_them" class="form-control border-start-0 split-input" value="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">{{ form.date|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.category|as_crispy_field }}</div>
+                    </div>
+
+                    <div class="mb-4">{{ form.notes|as_crispy_field }}</div>
+                    <div class="mb-4">{{ form.receipt|as_crispy_field }}</div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-5 pt-3 border-top">
+                        <a href="javascript:history.back()" class="btn btn-light rounded-pill px-4 me-md-2 fw-medium border shadow-sm">Cancel</a>
+                        <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm"><i class="bi bi-check2-circle me-2"></i>Save Expense</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const splitTypeSelect = document.getElementById("id_split_type");
+    const splitSection = document.getElementById("dynamic-split-section");
+    const splitLabel = document.getElementById("split-type-label");
+    const symbols = document.querySelectorAll(".split-symbol");
+    
+    function updateSplitUI() {
+        const type = splitTypeSelect.value;
+        if (type === "EQUAL") {
+            splitSection.style.display = "none";
+        } else {
+            splitSection.style.display = "block";
+            let sym = "₹";
+            let lbl = "Amounts";
+            
+            if (type === "EXACT") { sym = "₹"; lbl = "Exact Amounts"; }
+            if (type === "PERCENTAGE") { sym = "%"; lbl = "Percentages"; }
+            if (type === "SHARES") { sym = "Shares"; lbl = "Shares"; }
+            if (type === "ADJUSTMENT") { sym = "₹ +/-"; lbl = "Adjustments"; }
+            
+            symbols.forEach(s => s.innerText = sym);
+            splitLabel.innerText = lbl;
+        }
+    }
+    
+    splitTypeSelect.addEventListener("change", updateSplitUI);
+    updateSplitUI();
+    
+    const friendSelect = document.getElementById("id_split_with");
+    const friendNameLabel = document.getElementById("dynamic-friend-name");
+    
+    if (friendSelect && friendNameLabel) {
+        function updateFriendName() {
+            if(friendSelect.value) {
+                friendNameLabel.innerText = friendSelect.options[friendSelect.selectedIndex].text;
+            } else {
+                friendNameLabel.innerText = "Friend";
+            }
+        }
+        friendSelect.addEventListener("change", updateFriendName);
+        updateFriendName();
+    }
+});
+</script>
+<style>label[for="id_split_type"] { font-size: 0.875em; font-weight: 500; color: #6c757d; }</style>
+{% endblock %}
