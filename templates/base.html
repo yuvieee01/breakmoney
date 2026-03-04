@@ -88,7 +88,7 @@
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form method="post" action="{% url 'accounts:logout' %}">
+                                <form method="post" action="{% url 'account_logout' %}">
                                     {% csrf_token %}
                                     <button type="submit" class="dropdown-item-btn py-2">
                                         <i class="bi bi-box-arrow-right me-2"></i>Logout
@@ -101,10 +101,10 @@
                 {% else %}
                 <ul class="navbar-nav ms-auto fw-medium">
                     <li class="nav-item">
-                        <a class="nav-link px-3" href="{% url 'accounts:login' %}">Log In</a>
+                        <a class="nav-link px-3" href="{% url 'account_login' %}">Log In</a>
                     </li>
                     <li class="nav-item">
-                        <a class="btn btn-success rounded-pill px-4 ms-2 shadow-sm" href="{% url 'accounts:register' %}">Sign Up</a>
+                        <a class="btn btn-success rounded-pill px-4 ms-2 shadow-sm" href="{% url 'account_signup' %}">Sign Up</a>
                     </li>
                 </ul>
                 {% endif %}
