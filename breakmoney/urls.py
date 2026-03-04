@@ -5,7 +5,11 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+
+    # ✅ allauth routes: /accounts/login/, /accounts/signup/, etc.
     path("accounts/", include("allauth.urls")),
+
+    # your app routes
     path("friends/", include("friends.urls", namespace="friends")),
     path("groups/", include("groups.urls", namespace="groups")),
     path("expenses/", include("expenses.urls", namespace="expenses")),
@@ -16,4 +20,3 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
