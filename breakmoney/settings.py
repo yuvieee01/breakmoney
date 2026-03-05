@@ -142,9 +142,8 @@ ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_EMAIL_VERIFICATION = os.environ.get("ACCOUNT_EMAIL_VERIFICATION", "optional")
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
-LOGIN_URL = "account_login"
-LOGOUT_REDIRECT_URL = "account_login"
 LOGIN_REDIRECT_URL = "ledger:dashboard"
+LOGOUT_REDIRECT_URL = "account_login"      # allauth named URL
 
 # -------------------------
 # Password validation
