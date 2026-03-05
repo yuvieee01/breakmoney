@@ -6,7 +6,6 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views import generic
-from django.utils import timezone
 
 from .forms import CustomUserCreationForm, ProfileUpdateForm, ResendVerificationForm
 from .models import User
@@ -21,7 +20,6 @@ class RegisterView(generic.CreateView):
     def form_valid(self, form):
         user = form.save(commit=True)
 
-        # Ensure new users start unverified
         if not user.email_verified:
             services.send_verification_email(user, request=self.request)
 
@@ -39,10 +37,8 @@ class CustomLoginView(LoginView):
     def form_valid(self, form):
         user = form.get_user()
 
-        # Block login until verified
         if not getattr(user, "email_verified", False):
             messages.error(self.request, "Please verify your email before logging in.")
-            # Don't log them in
             return redirect("accounts:login")
 
         messages.success(self.request, f"Welcome back, {user.get_full_name()}!")
@@ -70,14 +66,13 @@ class VerificationSentView(View):
 
 class VerifyEmailView(View):
     def get(self, request, token):
-        ok, msg = services.verify_email_token(token)
+        ok, msg, user = services.verify_email_token(token)
 
         if ok:
-            user = services.get_user_from_token(token)
+            # Auto-login after verification
             login(request, user)
-
-            messages.success(request, "Email verified successfully.")
-            return redirect("ledger:dashboard")  # your dashboard route
+            messages.success(request, msg)
+            return redirect("ledger:dashboard")
 
         messages.error(request, msg)
         return render(request, "accounts/verify_email_result.html", {"success": False})
@@ -96,9 +91,11 @@ class ResendVerificationView(View):
         email = form.cleaned_data["email"]
         user = User.objects.filter(email=email).first()
 
-        # Always respond similarly (avoid user enumeration)
         if user and not user.email_verified:
             services.send_verification_email(user, request=request)
 
-        messages.success(request, "If that email exists and is not verified, a new verification link has been sent.")
+        messages.success(
+            request,
+            "If that email exists and is not verified, a new verification link has been sent."
+        )
         return redirect("accounts:login")
