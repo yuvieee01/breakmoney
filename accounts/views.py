@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth import login
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
@@ -70,12 +71,16 @@ class VerificationSentView(View):
 class VerifyEmailView(View):
     def get(self, request, token):
         ok, msg = services.verify_email_token(token)
+
         if ok:
-            messages.success(request, msg)
-            return render(request, "accounts/verify_email_result.html", {"success": True})
-        else:
-            messages.error(request, msg)
-            return render(request, "accounts/verify_email_result.html", {"success": False})
+            user = services.get_user_from_token(token)
+            login(request, user)
+
+            messages.success(request, "Email verified successfully.")
+            return redirect("ledger:dashboard")  # your dashboard route
+
+        messages.error(request, msg)
+        return render(request, "accounts/verify_email_result.html", {"success": False})
 
 
 class ResendVerificationView(View):
