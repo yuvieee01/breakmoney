@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Email Verification - Breakmoney{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4 p-md-5 text-center">
+
+        {% if success %}
+          <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+          <h3 class="fw-bold mt-3">Email verified</h3>
+          <p class="text-muted mt-2">You can now log in to your account.</p>
+          <a href="{% url 'accounts:login' %}" class="btn btn-success rounded-pill px-4 mt-3">Go to Login</a>
+        {% else %}
+          <i class="bi bi-x-circle-fill text-danger" style="font-size: 3rem;"></i>
+          <h3 class="fw-bold mt-3">Verification failed</h3>
+          <p class="text-muted mt-2">The link is invalid or expired.</p>
+          <a href="{% url 'accounts:resend_verification' %}" class="btn btn-outline-success rounded-pill px-4 mt-3">
+            Resend verification link
+          </a>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

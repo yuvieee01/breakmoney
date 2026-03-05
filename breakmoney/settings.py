@@ -3,36 +3,23 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# -------------------------
-# Core
-# -------------------------
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
-    "django-insecure-dev-key-breakmoney-2026"  # fine for local only; override in production env vars
+    "django-insecure-dev-key-breakmoney-2026"
 )
 
-# Safer default: production should be DEBUG=0 unless explicitly enabled
 DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
 
 ALLOWED_HOSTS = [
-    h.strip() for h in os.environ.get(
-        "DJANGO_ALLOWED_HOSTS",
-        "127.0.0.1,localhost"
-    ).split(",")
+    h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
     if h.strip()
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    o.strip() for o in os.environ.get(
-        "DJANGO_CSRF_TRUSTED_ORIGINS",
-        ""
-    ).split(",")
+    o.strip() for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
     if o.strip()
 ]
 
-# -------------------------
-# Apps
-# -------------------------
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -88,7 +75,10 @@ WSGI_APPLICATION = "breakmoney.wsgi.application"
 # -------------------------
 DJANGO_ENV = os.environ.get("DJANGO_ENV", "development").lower()
 
-if DJANGO_ENV == "production":
+# If you want to force sqlite even in "production"
+FORCE_SQLITE = os.environ.get("DJANGO_FORCE_SQLITE", "0") == "1"
+
+if DJANGO_ENV == "production" and not FORCE_SQLITE:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -150,16 +140,27 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # -------------------------
-# Email
+# Email (SMTP)
 # -------------------------
-# For friend-testing, keep console backend unless you explicitly configure SMTP.
-EMAIL_BACKEND = os.environ.get(
-    "DJANGO_EMAIL_BACKEND",
-    "django.core.mail.backends.console.EmailBackend"
-)
+EMAIL_BACKEND = os.environ.get("DJANGO_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+
+EMAIL_HOST = os.environ.get("DJANGO_EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("DJANGO_EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("DJANGO_EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("DJANGO_EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("DJANGO_EMAIL_USE_TLS", "1") == "1"
+EMAIL_USE_SSL = os.environ.get("DJANGO_EMAIL_USE_SSL", "0") == "1"
+
+DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_DEFAULT_FROM_EMAIL", "no-reply@breakmoney.local")
+
+# Needed to build verify links when request is unavailable
+SITE_URL = os.environ.get("DJANGO_SITE_URL", "http://127.0.0.1:8000").rstrip("/")
+
+# Verification settings
+EMAIL_VERIFICATION_TOKEN_TTL_HOURS = int(os.environ.get("EMAIL_VERIFICATION_TOKEN_TTL_HOURS", "24"))
 
 # -------------------------
-# Optional security hardening when behind HTTPS (recommended in production)
+# Optional security hardening when behind HTTPS
 # -------------------------
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

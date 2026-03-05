@@ -20,6 +20,12 @@
                         <button type="submit" class="btn btn-success btn-lg shadow-sm">Log In</button>
                     </div>
                 </form>
+
+                <div class="text-center mt-3">
+                    <a href="{% url 'accounts:resend_verification' %}" class="text-decoration-none">
+                        Didn’t get the verification email?
+                    </a>
+                </div>
             </div>
         </div>
         <div class="text-center mt-4">
