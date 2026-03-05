@@ -142,16 +142,30 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 # -------------------------
 # Email (SMTP)
 # -------------------------
-EMAIL_BACKEND = os.environ.get("DJANGO_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+# Default to SMTP backend; override via env vars.
+EMAIL_BACKEND = os.environ.get(
+    "DJANGO_EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend",
+)
 
+# NOTE (PythonAnywhere): Free accounts cannot connect to external SMTP servers
+# like Gmail. Use smtp.pythonanywhere.com instead.
 EMAIL_HOST = os.environ.get("DJANGO_EMAIL_HOST", "")
 EMAIL_PORT = int(os.environ.get("DJANGO_EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("DJANGO_EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("DJANGO_EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.environ.get("DJANGO_EMAIL_USE_TLS", "1") == "1"
 EMAIL_USE_SSL = os.environ.get("DJANGO_EMAIL_USE_SSL", "0") == "1"
+EMAIL_TIMEOUT = int(os.environ.get("DJANGO_EMAIL_TIMEOUT", "20"))
 
-DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_DEFAULT_FROM_EMAIL", "no-reply@breakmoney.local")
+# If running on PythonAnywhere and no host is provided, default to their SMTP.
+if (os.environ.get("PYTHONANYWHERE_DOMAIN") or os.environ.get("PYTHONANYWHERE_SITE")) and not EMAIL_HOST:
+    EMAIL_HOST = "smtp.pythonanywhere.com"
+
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DJANGO_DEFAULT_FROM_EMAIL",
+    (f"Breakmoney <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else "no-reply@breakmoney.local"),
+)
 
 # Needed to build verify links when request is unavailable
 SITE_URL = os.environ.get("DJANGO_SITE_URL", "http://127.0.0.1:8000").rstrip("/")
