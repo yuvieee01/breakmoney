@@ -32,40 +32,35 @@ def update_user_profile(user: User, **data) -> User:
     return user
 
 
-@transaction.atomic
-def create_email_verification_token(user: User) -> EmailVerificationToken:
-    """
-    Create a new verification token (valid for N hours).
-    We also optionally invalidate old unused tokens (cleaner + safer).
-    """
-    ttl_hours = getattr(settings, "EMAIL_VERIFICATION_TOKEN_TTL_HOURS", 24)
-    expires_at = timezone.now() + timezone.timedelta(hours=ttl_hours)
-
-    # Invalidate previous unused tokens (optional but tidy)
-    EmailVerificationToken.objects.filter(user=user, used_at__isnull=True).update(used_at=timezone.now())
-
-    return EmailVerificationToken.objects.create(user=user, expires_at=expires_at)
-
-
 def build_absolute_url(request, path: str) -> str:
     """
     Build absolute URL in a proxy-safe way.
-    Uses request if available, else SITE_URL.
+    Uses request if available, else SITE_URL / DJANGO_SITE_URL.
     """
     if request is not None:
         return request.build_absolute_uri(path)
 
-    site_url = getattr(settings, "SITE_URL", "").rstrip("/")
+    site_url = getattr(settings, "SITE_URL", "") or getattr(settings, "DJANGO_SITE_URL", "")
+    site_url = (site_url or "").rstrip("/")
     return f"{site_url}{path}"
 
 
+@transaction.atomic
 def send_verification_email(user: User, request=None) -> None:
     """
-    Sends verification link to the user's email.
+    Generates a NEW raw token, stores only its hash, and emails the raw token link.
+    Deletes older unused tokens for neatness.
     """
-    token_obj = create_email_verification_token(user)
-    verify_path = reverse("accounts:verify_email", kwargs={"token": str(token_obj.token)})
+    # Delete older unused tokens (simple + safe)
+    EmailVerificationToken.objects.filter(user=user, used_at__isnull=True).delete()
+
+    # Create a new token (returns (token_row, raw_token_string))
+    _token_obj, raw_token = EmailVerificationToken.create_for_user(user)
+
+    verify_path = reverse("accounts:verify_email", kwargs={"token": raw_token})
     verify_url = build_absolute_url(request, verify_path)
+
+    ttl_hours = int(getattr(settings, "EMAIL_VERIFICATION_TOKEN_TTL_HOURS", 24))
 
     subject = "Verify your Breakmoney email"
     message = (
@@ -73,7 +68,7 @@ def send_verification_email(user: User, request=None) -> None:
         f"Thanks for signing up for Breakmoney.\n\n"
         f"Please verify your email by clicking this link:\n"
         f"{verify_url}\n\n"
-        f"This link expires in {getattr(settings, 'EMAIL_VERIFICATION_TOKEN_TTL_HOURS', 24)} hours.\n\n"
+        f"This link expires in {ttl_hours} hours.\n\n"
         f"If you didn't create this account, you can ignore this email.\n"
     )
 
@@ -87,30 +82,39 @@ def send_verification_email(user: User, request=None) -> None:
 
 
 @transaction.atomic
-def verify_email_token(token: str) -> tuple[bool, str]:
+def verify_email_token(raw_token: str) -> tuple[bool, str]:
     """
     Validate token; if valid, verify the user and mark token as used.
 
     Returns: (success, message)
     """
+    if not raw_token:
+        return False, "Invalid verification link."
+
+    token_hash = EmailVerificationToken.hash_token(raw_token)
+
     try:
-        token_obj = EmailVerificationToken.objects.select_related("user").get(token=token)
+        token_obj = EmailVerificationToken.objects.select_related("user").get(token_hash=token_hash)
     except EmailVerificationToken.DoesNotExist:
         return False, "Invalid verification link."
 
-    if token_obj.is_used():
-        # If already verified, this is fine: show friendly message.
-        if token_obj.user.email_verified:
+    if token_obj.is_used:
+        if getattr(token_obj.user, "email_verified", False):
             return True, "Your email is already verified."
         return False, "This verification link has already been used."
 
-    if token_obj.is_expired():
+    if token_obj.is_expired:
         return False, "This verification link has expired. Please request a new one."
 
     user = token_obj.user
     user.email_verified = True
-    user.email_verified_at = timezone.now()
-    user.save(update_fields=["email_verified", "email_verified_at"])
+
+    # If your model has email_verified_at, set it too (safe if missing)
+    if hasattr(user, "email_verified_at"):
+        user.email_verified_at = timezone.now()
+        user.save(update_fields=["email_verified", "email_verified_at"])
+    else:
+        user.save(update_fields=["email_verified"])
 
     token_obj.mark_used()
     return True, "Email verified successfully."
