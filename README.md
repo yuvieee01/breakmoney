@@ -2,6 +2,8 @@
 
 **BreakMoney** is a robust, backend-driven expense-sharing application built with **Django 5+**. Inspired by Splitwise, it simplifies group finances through a custom netting algorithm that minimizes the number of transactions required to settle debts.
 
+**Live at:** https://yuvieee01.pythonanywhere.com/
+
 ## 🚀 Key Features
 
 * **Advanced Splitting Logic:** Support for equal splits, exact amounts, percentages, shares, and adjustments.
