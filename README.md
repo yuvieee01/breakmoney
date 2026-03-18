@@ -27,7 +27,7 @@ breakmoney/
 ├── templates/          # Responsive Bootstrap-based views
 └── static/             # Custom CSS & JavaScript
 ```
-⚙️ Installation
+## ⚙️ Installation
 Clone the repository:
 
 Bash
@@ -49,8 +49,8 @@ python manage.py migrate
 python manage.py runserver
 
 ===================================================
-🗺️ Future Roadmap
-Infrastructure & DevOps:
+## 🗺️ Future Roadmap
+### Infrastructure & DevOps:
 
 [ ] Containerization: Dockerize the application for consistent development and deployment environments.
 
@@ -58,7 +58,7 @@ Infrastructure & DevOps:
 
 [ ] CI/CD Pipeline: Implement GitHub Actions for automated testing and deployment.
 
-Enhanced Intelligence & Features:
+### Enhanced Intelligence & Features:
 
 [ ] Predictive Spending Analytics: Integrate a lightweight Scikit-learn model to categorize expenses and predict monthly budget overruns.
 
