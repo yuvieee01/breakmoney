@@ -30,26 +30,27 @@ breakmoney/
 └── static/             # Custom CSS & JavaScript
 ```
 ## ⚙️ Installation
-Clone the repository:
-
-Bash
+###Clone the repository:
+```bash
 git clone [https://github.com/yuvieee01/breakmoney.git](https://github.com/yuvieee01/breakmoney.git)
 cd breakmoney
-Set up a virtual environment:
+```
 
-Bash
+###Set up a virtual environment:
+```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-Install dependencies:
+```
 
-Bash
+###Install dependencies:
+```bash
 pip install -r requirements.txt
-Run migrations & start server:
-
-Bash
+```
+###Run migrations & start server:
+```bash
 python manage.py migrate
 python manage.py runserver
-
+```
 ===================================================
 ## 🗺️ Future Roadmap
 ### Infrastructure & DevOps:
