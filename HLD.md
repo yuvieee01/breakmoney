@@ -12,51 +12,51 @@
 ## 2. Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              CLIENT LAYER                                    │
-│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐                   │
-│  │   Browser   │────▶│  Bootstrap 5 │────▶│   Django    │                   │
-│  │  (Django    │◀────│   Templates  │◀────│   Views     │                   │
-│  │   Templates)│     │   (HTML/CSS) │     │             │                   │
-│  └─────────────┘     └─────────────┘     └──────┬──────┘                   │
+┌────────────────────────────────────────────────────────────────────────────┐
+│                              CLIENT LAYER                                  │
+│  ┌─────────────┐     ┌──────────────┐    ┌─────────────┐                   │
+│  │   Browser   │────▶│  Bootstrap 5 │───▶│   Django    │                   │
+│  │  (Django    │◀────│   Templates  │◀───│   Views     │                   │
+│  │   Templates)│     │   (HTML/CSS) │    │             │                   │
+│  └─────────────┘     └──────────────┘    └───────┬─────┘                   │
 └──────────────────────────────────────────────────┼─────────────────────────┘
                                                    │
 ┌──────────────────────────────────────────────────┼─────────────────────────┐
-│                          DJANGO APP LAYER         │                          │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  │  ┌────────────┐        │
-│  │  accounts  │  │   friends  │  │   groups   │◀─┼─▶│   ledger    │        │
-│  │            │  │            │  │            │  │  │            │        │
-│  │  - User    │  │-Friendship │  │  - Group   │  │  │-Dashboard  │        │
-│  │  - Auth    │  │  - Invite  │  │  - Member  │  │  │-Balance    │        │
-│  └────────────┘  └────────────┘  └─────┬──────┘  │  └─────┬──────┘        │
-│                                        │          │        │                │
-│  ┌────────────┐  ┌────────────┐  ┌─────┴──────┐  │  ┌─────┴──────┐        │
-│  │  expenses  │  │ settlements│  │   audit    │◀─┼─▶│  selectors │        │
-│  │            │  │            │  │            │  │  │            │        │
-│  │  - Expense │  │-Settlement │  │-ActivityLog│  │  │-get_all_   │        │
-│  │  - Split   │  │            │  │            │  │  │  balances  │        │
-│  └────────────┘  └────────────┘  └────────────┘  │  └─────┬──────┘        │
-│                                                   │        │                │
-│  ┌─────────────────────────────────────────────┐  │        │                │
-│  │              ledger/services.py             │──┘        │                │
+│                          DJANGO APP LAYER        │                         │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐  │  ┌────────────┐         │
+│  │  accounts  │  │   friends  │  │   groups   │◀─┼─▶│   ledger   │         │
+│  │            │  │            │  │            │  │  │            │         │
+│  │  - User    │  │-Friendship │  │  - Group   │  │  │-Dashboard  │         │
+│  │  - Auth    │  │  - Invite  │  │  - Member  │  │  │-Balance    │         │
+│  └────────────┘  └────────────┘  └─────┬──────┘  │  └─────┬──────┘         │
+│                                        │         │        │                │
+│  ┌────────────┐  ┌────────────┐  ┌─────┴──────┐  │  ┌─────┴──────┐         │
+│  │  expenses  │  │ settlements│  │   audit    │◀─┼─▶│  selectors │         │
+│  │            │  │            │  │            │  │  │            │         │
+│  │  - Expense │  │-Settlement │  │-ActivityLog│  │  │-get_all_   │         │
+│  │  - Split   │  │            │  │            │  │  │  balances  │         │
+│  └────────────┘  └────────────┘  └────────────┘  │  └─────┬──────┘         │
+│                                                  │        │                │
+│  ┌─────────────────────────────────────────────┐ │        │                │
+│  │              ledger/services.py             │─┘        │                │
 │  │           simplify_debts() + dashboard      │          │                │
 │  └─────────────────────────────────────────────┘          │                │
-└──────────────────────────────────────────────────┼─────────┼────────────────┘
-                                                   │         │
-┌──────────────────────────────────────────────────┼─────────┼────────────────┐
-│                          DATA LAYER              │         │                │
-│                                                   │         │                │
-│  ┌──────────────────────────────────────────────┐│         │                │
-│  │                  Django ORM                  ││         │                │
-│  └──────────────────────────────────────────────┘│         │                │
-│                        │                         │         │                │
-│                    ┌───┴───┐                     │         │                │
-│                    ▼       ▼                     │         │                │
-│            ┌───────────┐ ┌───────────┐           │         │                │
-│            │ PostgreSQL│ │  SQLite   │           │         │                │
-│            │(Production│ │(Dev only) │           │         │                │
-│            └───────────┘ └───────────┘           │         │                │
-└──────────────────────────────────────────────────┴─────────┴────────────────┘
+└──────────────────────────────────────────────────┼────────┼────────────────┘
+                                                   │        │
+┌──────────────────────────────────────────────────┼────────┼────────────────┐
+│                          DATA LAYER              │        │                │
+│                                                  │        │                │
+│  ┌──────────────────────────────────────────────┐│        │                │
+│  │                  Django ORM                  ││        │                │
+│  └──────────────────────────────────────────────┘│        │                │
+│                        │                         │        │                │
+│                    ┌───┴───┐                     │        │                │
+│                    ▼       ▼                     │        │                │
+│           ┌────────────┐ ┌───────────┐           │        │                │
+│           │ PostgreSQL │ │  SQLite   │           │        │                │
+│           │(Production)│ │(Dev only) │           │        │                │
+│           └────────────┘ └───────────┘           │        │                │
+└──────────────────────────────────────────────────┴────────┴────────────────┘
 ```
 
 ---
@@ -156,26 +156,26 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    simplify_debts() Algorithm                    │
+│                    simplify_debts() Algorithm                   │
 ├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
+│                                                                 │
 │  1. Calculate balance for each user:                            │
 │     balance = sum(amount_paid) - sum(amount_owed)               │
-│                                                                  │
+│                                                                 │
 │  2. Classify users:                                             │
-│     • Debtors (balance < 0) → owe money                          │
+│     • Debtors (balance < 0) → owe money                         │
 │     • Creditors (balance > 0) → are owed                        │
-│                                                                  │
-│  3. Sort both lists by amount (descending)                       │
-│                                                                  │
-│  4. Match largest debtor with largest creditor:                │
+│                                                                 │
+│  3. Sort both lists by amount (descending)                      │
+│                                                                 │
+│  4. Match largest debtor with largest creditor:                 │
 │     settle_amount = min(debt, credit)                           │
 │     Update balances, advance pointers                           │
-│                                                                  │
-│  5. Merge duplicate transactions into single payments            │
-│                                                                  │
+│                                                                 │
+│  5. Merge duplicate transactions into single payments           │
+│                                                                 │
 │  6. Return minimal transaction set                              │
-│                                                                  │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
 Example:
@@ -249,52 +249,52 @@ User Action: "View Balances"
         │                     │                     │
         ▼                     ▼                     ▼
 ┌───────────────┐   ┌──────────────────┐   ┌─────────────────┐
-│ groups_group  │   │friends_friendship│   │friends_friend  │
-├───────────────┤   ├──────────────────┤   │  _invitation   │
+│ groups_group  │   │friends_friendship│   │friends_friend   │
+├───────────────┤   ├──────────────────┤   │  _invitation    │
 │ id (PK)       │   │ id (PK)          │   ├─────────────────┤
-│ name          │   │ user1_id (FK)   │   │ id (PK)         │
-│ description   │   │ user2_id (FK)   │   │ sender_id (FK)  │
-│ created_by_id │   │ created_at      │   │ email           │
+│ name          │   │ user1_id (FK)    │   │ id (PK)         │
+│ description   │   │ user2_id (FK)    │   │ sender_id (FK)  │
+│ created_by_id │   │ created_at       │   │ email           │
 └───────┬───────┘   └──────────────────┘   │ status          │
-        │                                   └─────────────────┘
+        │                                  └─────────────────┘
         │
         ▼
 ┌───────────────────────┐     ┌───────────────────────┐
 │  groups_groupmember   │     │     expenses_expense  │
 ├───────────────────────┤     ├───────────────────────┤
-│ id (PK)               │     │ id (PK)              │
+│ id (PK)               │     │ id (PK)               │
 │ group_id (FK)         │◀────│ group_id (FK)         │
-│ user_id (FK)          │     │ description          │
-│ role (ADMIN/MEMBER)   │     │ amount (Decimal)     │
-│ joined_at             │     │ date                 │
-└───────────────────────┘     │ category             │
-        │                     │ split_type           │
-        │                     │ created_by_id (FK)   │
+│ user_id (FK)          │     │ description           │
+│ role (ADMIN/MEMBER)   │     │ amount (Decimal)      │
+│ joined_at             │     │ date                  │
+└───────────────────────┘     │ category              │
+        │                     │ split_type            │
+        │                     │ created_by_id (FK)    │
         ▼                     └───────────┬───────────┘
 ┌───────────────────────┐                 │
 │expenses_expense       │                 ▼
 │_participant           │     ┌───────────────────────┐
-├───────────────────────┤     │   settlements        │
-│ id (PK)               │     │   _settlement        │
+├───────────────────────┤     │   settlements         │
+│ id (PK)               │     │   _settlement         │
 │ expense_id (FK)       │     ├───────────────────────┤
-│ user_id (FK)          │     │ id (PK)              │
-│ amount_paid           │     │ payer_id (FK)        │
-│ amount_owed           │◀────│ receiver_id (FK)     │
-│ weight                │     │ group_id (FK)        │
-└───────────────────────┘     │ amount               │
-                              │ date                 │
+│ user_id (FK)          │     │ id (PK)               │
+│ amount_paid           │     │ payer_id (FK)         │
+│ amount_owed           │◀────│ receiver_id (FK)      │
+│ weight                │     │ group_id (FK)         │
+└───────────────────────┘     │ amount                │
+                              │ date                  │
                               └───────────────────────┘
 
-┌───────────────────────┐
+┌────────────────────────┐
 │    audit_activitylog   │
-├───────────────────────┤
-│ id (PK)               │
-│ user_id (FK)          │
-│ group_id (FK)         │
-│ action_type           │
-│ description           │
-│ created_at            │
-└───────────────────────┘
+├────────────────────────┤
+│ id (PK)                │
+│ user_id (FK)           │
+│ group_id (FK)          │
+│ action_type            │
+│ description            │
+│ created_at             │
+└────────────────────────┘
 ```
 
 ---
@@ -302,28 +302,28 @@ User Action: "View Balances"
 ## 7. URL Structure
 
 ```
-/                           → ledger:dashboard (home)
-/accounts/                  → Login, Register, Logout
+/                          → ledger:dashboard (home)
+/accounts/                 → Login, Register, Logout
 /accounts/register/        → Registration
 /accounts/login/           → Login
 /accounts/logout/          → Logout
 /accounts/verify/<token>/  → Email verification
 
 /friends/                  → Friend list
-/friends/invite/          → Send friend invite
+/friends/invite/           → Send friend invite
 
-/groups/                  → Group list
-/groups/create/           → Create group
-/groups/<id>/             → Group detail
-/groups/<id>/add/         → Add member
+/groups/                   → Group list
+/groups/create/            → Create group
+/groups/<id>/              → Group detail
+/groups/<id>/add/          → Add member
 
-/expenses/add/            → Add expense
-/expenses/<id>/edit/      → Edit expense
-/expenses/<id>/delete/    → Delete expense
+/expenses/add/             → Add expense
+/expenses/<id>/edit/       → Edit expense
+/expenses/<id>/delete/     → Delete expense
 
-/settlements/add/         → Record payment
+/settlements/add/          → Record payment
 
-/activity/                → Activity log
+/activity/                 → Activity log
 ```
 
 ---
