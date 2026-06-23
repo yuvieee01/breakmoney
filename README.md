@@ -24,10 +24,14 @@
 ```text
 breakmoney/
 ├── core/               # Authentication & User Profiles
-├── expenses/           # Splitting logic & Transaction models
-├── groups/             # Group management & Membership logic
-├── templates/          # Responsive Bootstrap-based views
 └── static/             # Custom CSS & JavaScript
+└── accounts/           # Custom email-based user, email verification tokens, profile management
+└── friends/            # Friendship graph and pending invitations
+└── groups/             # Expense groups with ADMIN/MEMBER roles
+└── expenses/           # Expense records + per-participant split amounts (5 split types)
+└── settlements/        # Payer→receiver payment records
+└── ledger/             # No models at all; pure calculation layer — runs debt simplification and builds dashboard data
+└── audit/              # ActivityLog model for activity feed (built but silently never triggered)
 ```
 ## ⚙️ Installation
 ###Clone the repository:
